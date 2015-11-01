@@ -1,23 +1,26 @@
-public class MultiMatrixThread extends Thread {
-  private Integer[][] a;
-  private Integer[][] b;
-  private Integer[][] result;
-  private int i1, i2;
+public class MultiMatrixThread<T> extends Thread {
+  final private T[][] a;
+  final private T[][] b;
+  final private T[][] result;
+  final private int i1, i2;
+  final private MultiMatrix.Multiplier<T> multiplier;
 
-  public MultiMatrixThread(Integer[][] a, Integer[][] b, Integer[][] result, int i1, int i2) {
+  public MultiMatrixThread(final T[][] a, final T[][] b, final T[][] result, final MultiMatrix.Multiplier<T> multiplier,
+                           final int i1, final int i2) {
     this.a = a;
     this.b = b;
     this.result = result;
     this.i1 = i1;
     this.i2 = i2;
+    this.multiplier = multiplier;
   }
 
   public void run() {
     for (int i = i1; i < i2; i++) {
       for (int j = 0; j < b[0].length; j++) {
-        result[i][j] = 0;
+        result[i][j] = multiplier.zero();
         for (int k = 0; k < b.length; ++k) {
-          result[i][j] += a[i][k] * b[k][j];
+          result[i][j] = multiplier.add(result[i][j], multiplier.multi(a[i][k], b[k][j]));
         }
       }
     }

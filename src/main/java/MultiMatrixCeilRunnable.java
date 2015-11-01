@@ -1,36 +1,46 @@
 import java.util.concurrent.CountDownLatch;
 
-public class MultiMatrixCeilRunnable implements Runnable {
-  private Integer[][] a;
-  private Integer[][] b;
-  private Integer[][] result;
-  private int i, j;
-  CountDownLatch cdl;
+public class MultiMatrixCeilRunnable<T> implements Runnable {
+  final private T[][] a;
+  final private T[][] b;
+  final private T[][] result;
+  final private int i, j;
+  final private Consumer consumer;
+  final private MultiMatrix.Multiplier<T> multiplier;
 
-  public MultiMatrixCeilRunnable(Integer[][] a, Integer[][] b, Integer[][] result, int i, int j) {
+  public MultiMatrixCeilRunnable(final T[][] a, final T[][] b, final T[][] result,
+                                 final MultiMatrix.Multiplier<T> multiplier, final int i, final int j,
+                                 final Consumer consumer) {
     this.a = a;
     this.b = b;
     this.result = result;
     this.i = i;
     this.j = j;
-    this.cdl = null;
-  }
-
-  public MultiMatrixCeilRunnable(Integer[][] a, Integer[][] b, Integer[][] result, int i, int j, CountDownLatch cdl) {
-    this.a = a;
-    this.b = b;
-    this.result = result;
-    this.i = i;
-    this.j = j;
-    this.cdl = cdl;
+    this.consumer = consumer;
+    this.multiplier = multiplier;
   }
 
   public void run() {
-    result[i][j] = 0;
+    result[i][j] = multiplier.zero();
     for (int k = 0; k < b.length; ++k) {
-      result[i][j] += a[i][k] * b[k][j];
+      result[i][j] = multiplier.add(result[i][j], multiplier.multi(a[i][k], b[k][j]));
     }
-    if (cdl != null) {
+    consumer.onFinish();
+  }
+
+  public static class Consumer {
+    void onFinish() {}
+  }
+
+  public static class ConsumerCDL extends Consumer {
+    final private CountDownLatch cdl;
+
+    ConsumerCDL(final CountDownLatch cdl) {
+      this.cdl = cdl;
+    }
+
+    @Override
+    void onFinish() {
       cdl.countDown();
     }
   }

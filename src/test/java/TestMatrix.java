@@ -3,122 +3,57 @@ import org.junit.Test;
 
 import java.util.Arrays;
 import java.util.Random;
-import java.util.concurrent.ExecutionException;
 
 public class TestMatrix {
-  @Test
-  public void TestThreadInteger() {
-    Integer[][] a = new Integer[5][4];
-    Integer[][] b = new Integer[4][6];
-    Integer[][] result = new Integer[a.length][b[0].length];
-    Integer[][] resultThread = new Integer[a.length][b[0].length];
-    Random random = new Random(System.currentTimeMillis());
+  private void testMulti(final MultiMatrixInterface<Double> mmi) {
+    final Double[][] a = new Double[5][4];
+    final Double[][] b = new Double[4][6];
+    final Double[][] result = new Double[a.length][b[0].length];
+    final Double[][] resultThread = new Double[a.length][b[0].length];
+    final Random random = new Random(System.currentTimeMillis());
     for (int ind = 0; ind < 3; ind++) {
       for (int i = 0; i < a.length; i++) {
         for (int j = 0; j < a[i].length; j++) {
-          a[i][j] = random.nextInt();
+          a[i][j] = random.nextDouble();
         }
       }
       for (int i = 0; i < b.length; i++) {
         for (int j = 0; j < b[i].length; j++) {
-          b[i][j] = random.nextInt();
+          b[i][j] = random.nextDouble();
         }
       }
+      MultiMatrix.Multiplier<Double> multiplier = new MultiplierDouble();
+      MultiMatrix.multi(a, b, result, multiplier);
       try {
-        MultiMatrix.multi(a, b, result);
-        MultiMatrix.multiThread(a, b, resultThread);
+        mmi.multi(a, b, resultThread, multiplier);
         Assert.assertTrue(MatrixEqual(result, resultThread));
-      } catch (InterruptedException e) {
+      } catch (final Exception e) {
         e.printStackTrace();
       }
     }
   }
 
   @Test
-  public void TestThreadPoolFutureInteger() {
-    Integer[][] a = new Integer[5][4];
-    Integer[][] b = new Integer[4][6];
-    Integer[][] result = new Integer[a.length][b[0].length];
-    Integer[][] resultThread = new Integer[a.length][b[0].length];
-    Random random = new Random(System.currentTimeMillis());
-    for (int ind = 0; ind < 3; ind++) {
-      for (int i = 0; i < a.length; i++) {
-        for (int j = 0; j < a[i].length; j++) {
-          a[i][j] = random.nextInt();
-        }
-      }
-      for (int i = 0; i < b.length; i++) {
-        for (int j = 0; j < b[i].length; j++) {
-          b[i][j] = random.nextInt();
-        }
-      }
-      try {
-        MultiMatrix.multi(a, b, result);
-        MultiMatrix.multiThreadPoolFuture(a, b, resultThread);
-        Assert.assertTrue(MatrixEqual(result, resultThread));
-      } catch (InterruptedException | ExecutionException e) {
-        e.printStackTrace();
-      }
-    }
+  public void testMultiThread() {
+    testMulti(MultiMatrix::multiThread);
   }
 
   @Test
-  public void TestThreadPoolCounterInteger() {
-    Integer[][] a = new Integer[5][4];
-    Integer[][] b = new Integer[4][6];
-    Integer[][] result = new Integer[a.length][b[0].length];
-    Integer[][] resultThread = new Integer[a.length][b[0].length];
-    Random random = new Random(System.currentTimeMillis());
-    for (int ind = 0; ind < 3; ind++) {
-      for (int i = 0; i < a.length; i++) {
-        for (int j = 0; j < a[i].length; j++) {
-          a[i][j] = random.nextInt();
-        }
-      }
-      for (int i = 0; i < b.length; i++) {
-        for (int j = 0; j < b[i].length; j++) {
-          b[i][j] = random.nextInt();
-        }
-      }
-      try {
-        MultiMatrix.multi(a, b, result);
-        MultiMatrix.multiThreadPoolCounter(a, b, resultThread);
-        Assert.assertTrue(MatrixEqual(result, resultThread));
-      } catch (InterruptedException | ExecutionException e) {
-        e.printStackTrace();
-      }
-    }
+  public void testMultiManyThread() {
+    testMulti(MultiMatrix::multiManyThreads);
   }
 
   @Test
-  public void TestManyThreadInteger() {
-    Integer[][] a = new Integer[5][4];
-    Integer[][] b = new Integer[4][6];
-    Integer[][] result = new Integer[a.length][b[0].length];
-    Integer[][] resultThread = new Integer[a.length][b[0].length];
-    Random random = new Random(System.currentTimeMillis());
-    for (int ind = 0; ind < 3; ind++) {
-      for (int i = 0; i < a.length; i++) {
-        for (int j = 0; j < a[i].length; j++) {
-          a[i][j] = random.nextInt();
-        }
-      }
-      for (int i = 0; i < b.length; i++) {
-        for (int j = 0; j < b[i].length; j++) {
-          b[i][j] = random.nextInt();
-        }
-      }
-      try {
-        MultiMatrix.multi(a, b, result);
-        MultiMatrix.multiManyThreads(a, b, resultThread);
-        Assert.assertTrue(MatrixEqual(result, resultThread));
-      } catch (InterruptedException e) {
-        e.printStackTrace();
-      }
-    }
+  public void testMultiThreadPoolCounter() {
+    testMulti(MultiMatrix::multiThreadPoolCounter);
   }
 
-  private boolean MatrixEqual(Integer[][] a, Integer[][] b) {
+  @Test
+  public void testMultiThreadPoolFuture() {
+    testMulti(MultiMatrix::multiThreadPoolFuture);
+  }
+
+  private boolean MatrixEqual(final Double[][] a, final Double[][] b) {
     if (a.length != b.length) {
       return false;
     }

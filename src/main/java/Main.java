@@ -1,67 +1,101 @@
 import java.util.Random;
-import java.util.concurrent.ExecutionException;
 
 public class Main {
-  public static void main(String[] args) {
-    TestTime(20);
-    TestTime(50);
-    TestTime(100);
-    TestTime(300);
-    TestTime(500);
+  public static void main(final String[] args) {
+    MultiMatrix.Multiplier multiplier = new MultiplierDouble();
+    TestTime(20, multiplier);
+    TestTime(50, multiplier);
+    TestTime(100, multiplier);
+    TestTime(300, multiplier);
   }
 
-  private static void TestTime(int size) {
-    Integer[][] a = new Integer[size][size];
-    Integer[][] b = new Integer[size][size];
-    Integer[][] result = new Integer[a.length][b[0].length];
-    Random random = new Random(System.currentTimeMillis());
+  private static void TestTime(final int size, final MultiMatrix.Multiplier multiplier) {
+    final Double[][] result = new Double[size][size];
+    System.out.print("size = ");
+    System.out.println(size);
+    try {
+      calcAveTime("without threads", size, result, MultiMatrix::multi, multiplier);
+    } catch (final Exception e) {
+      e.printStackTrace();
+      return;
+    }
+    try {
+      calcAveTime("without threads with another order", size, result, MultiMatrix::multiAnotherOrder, multiplier);
+    } catch (final Exception e) {
+      e.printStackTrace();
+      return;
+    }
+    try {
+      calcAveTime("with many threads", size, result, MultiMatrix::multiManyThreads, multiplier);
+    } catch (final Exception e) {
+      e.printStackTrace();
+      return;
+    }
+    try {
+      calcAveTime("with threads", size, result, MultiMatrix::multiThread, multiplier);
+    } catch (final Exception e) {
+      e.printStackTrace();
+      return;
+    }
+    try {
+      calcAveTime("with thread pool with future", size, result, MultiMatrix::multi, multiplier);
+    } catch (final Exception e) {
+      e.printStackTrace();
+      return;
+    }
+    try {
+      calcAveTime("with thread pool with counter", size, result, MultiMatrix::multi, multiplier);
+    } catch (final Exception e) {
+      e.printStackTrace();
+    }
+  }
+
+  private static int calcTime(final int size, final Double[][] result, final MultiMatrixInterface<Double> mmi,
+                              final MultiMatrix.Multiplier multiplier) throws Exception {
+    final Double[][] a = new Double[size][size];
+    final Double[][] b = new Double[size][size];
+    final Random random = new Random(System.currentTimeMillis());
     for (int i = 0; i < a.length; i++) {
       for (int j = 0; j < a[i].length; j++) {
-        a[i][j] = random.nextInt();
+        a[i][j] = random.nextDouble();
       }
     }
     for (int i = 0; i < b.length; i++) {
       for (int j = 0; j < b[i].length; j++) {
-        b[i][j] = random.nextInt();
+        b[i][j] = random.nextDouble();
       }
     }
-    System.out.print("size = ");
-    System.out.println(size);
-    long t = System.currentTimeMillis();
-    MultiMatrix.multi(a, b, result);
-    System.out.print("time without threads = ");
-    System.out.println(System.currentTimeMillis() - t);
-    t = System.currentTimeMillis();
+    final long t = System.currentTimeMillis();
     try {
-      MultiMatrix.multiManyThreads(a, b, result);
-    } catch (InterruptedException e) {
-      return;
+      mmi.multi(a, b, result, multiplier);
+    } catch (final Exception e) {
+      throw new Exception();
     }
-    System.out.print("time with many threads = ");
-    System.out.println(System.currentTimeMillis() - t);
-    t = System.currentTimeMillis();
-    try {
-      MultiMatrix.multiThread(a, b, result);
-    } catch (InterruptedException e) {
-      return;
+    return (int) (System.currentTimeMillis() - t);
+  }
+
+  private static void calcAveTime(final String message, final int size, final Double[][] result,
+                                  final MultiMatrixInterface<Double> mmi,
+                                  final MultiMatrix.Multiplier multiplier) throws Exception {
+    final int[] time = new int[100];
+    double aveTime = 0;
+    double dispersion = 0;
+    for (int i = 0; i < 100; ++i) {
+      time[i] = calcTime(size, result, mmi, multiplier);
+      if (i > 0) {
+        aveTime += time[i];
+      }
     }
-    System.out.print("time with threads = ");
-    System.out.println(System.currentTimeMillis() - t);
-    t = System.currentTimeMillis();
-    try {
-      MultiMatrix.multiThreadPoolFuture(a, b, result);
-    } catch (InterruptedException | ExecutionException e) {
-      return;
+    aveTime /= 99;
+
+    for (int i = 1; i < 100; ++i) {
+      dispersion += (time[i] - aveTime) * (time[i] - aveTime);
     }
-    System.out.print("time with thread pool with future = ");
-    System.out.println(System.currentTimeMillis() - t);
-    t = System.currentTimeMillis();
-    try {
-      MultiMatrix.multiThreadPoolCounter(a, b, result);
-    } catch (InterruptedException | ExecutionException e) {
-      return;
-    }
-    System.out.print("time with thread pool with counter = ");
-    System.out.println(System.currentTimeMillis() - t);
+    dispersion /= 99;
+
+    System.out.print("average time " + message + " = ");
+    System.out.println(aveTime);
+    System.out.print("dispersion " + message + " = ");
+    System.out.println(dispersion);
   }
 }
