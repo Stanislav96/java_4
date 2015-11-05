@@ -3,48 +3,50 @@ import java.util.Random;
 public class Main {
   public static void main(final String[] args) {
     MultiMatrix.Multiplier multiplier = new MultiplierDouble();
-    TestTime(20, multiplier);
-    TestTime(50, multiplier);
-    TestTime(100, multiplier);
-    TestTime(300, multiplier);
+    TestTime(99, 20, multiplier);
+    TestTime(99, 50, multiplier);
+    TestTime(99, 100, multiplier);
+    TestTime(99, 300, multiplier);
+    //TestTime(5, 1000, multiplier);
   }
 
-  private static void TestTime(final int size, final MultiMatrix.Multiplier multiplier) {
+  private static void TestTime(final int numberOfRepeats, final int size, final MultiMatrix.Multiplier multiplier) {
     final Double[][] result = new Double[size][size];
     System.out.print("size = ");
     System.out.println(size);
     try {
-      calcAveTime("without threads", size, result, MultiMatrix::multi, multiplier);
+      calcAveTime(numberOfRepeats, "without threads", size, result, MultiMatrix::multi, multiplier);
     } catch (final Exception e) {
       e.printStackTrace();
       return;
     }
     try {
-      calcAveTime("without threads with another order", size, result, MultiMatrix::multiAnotherOrder, multiplier);
+      calcAveTime(numberOfRepeats, "without threads with another order", size, result, MultiMatrix::multiAnotherOrder,
+                  multiplier);
     } catch (final Exception e) {
       e.printStackTrace();
       return;
     }
     try {
-      calcAveTime("with many threads", size, result, MultiMatrix::multiManyThreads, multiplier);
+      calcAveTime(numberOfRepeats, "with many threads", size, result, MultiMatrix::multiManyThreads, multiplier);
     } catch (final Exception e) {
       e.printStackTrace();
       return;
     }
     try {
-      calcAveTime("with threads", size, result, MultiMatrix::multiThread, multiplier);
+      calcAveTime(numberOfRepeats, "with threads", size, result, MultiMatrix::multiThread, multiplier);
     } catch (final Exception e) {
       e.printStackTrace();
       return;
     }
     try {
-      calcAveTime("with thread pool with future", size, result, MultiMatrix::multi, multiplier);
+      calcAveTime(numberOfRepeats, "with thread pool with future", size, result, MultiMatrix::multi, multiplier);
     } catch (final Exception e) {
       e.printStackTrace();
       return;
     }
     try {
-      calcAveTime("with thread pool with counter", size, result, MultiMatrix::multi, multiplier);
+      calcAveTime(numberOfRepeats, "with thread pool with counter", size, result, MultiMatrix::multi, multiplier);
     } catch (final Exception e) {
       e.printStackTrace();
     }
@@ -74,24 +76,25 @@ public class Main {
     return (int) (System.currentTimeMillis() - t);
   }
 
-  private static void calcAveTime(final String message, final int size, final Double[][] result,
+  private static void calcAveTime(final int numberOfRepeats, final String message, final int size,
+                                  final Double[][] result,
                                   final MultiMatrixInterface<Double> mmi,
                                   final MultiMatrix.Multiplier multiplier) throws Exception {
-    final int[] time = new int[100];
+    final int[] time = new int[numberOfRepeats + 1];
     double aveTime = 0;
     double dispersion = 0;
-    for (int i = 0; i < 100; ++i) {
+    for (int i = 0; i <= numberOfRepeats; ++i) {
       time[i] = calcTime(size, result, mmi, multiplier);
       if (i > 0) {
         aveTime += time[i];
       }
     }
-    aveTime /= 99;
+    aveTime /= numberOfRepeats;
 
-    for (int i = 1; i < 100; ++i) {
+    for (int i = 1; i <= numberOfRepeats; ++i) {
       dispersion += (time[i] - aveTime) * (time[i] - aveTime);
     }
-    dispersion /= 99;
+    dispersion /= numberOfRepeats;
 
     System.out.print("average time " + message + " = ");
     System.out.println(aveTime);
