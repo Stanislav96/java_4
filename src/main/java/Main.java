@@ -7,7 +7,7 @@ public class Main {
     TestTime(99, 50, multiplier);
     TestTime(99, 100, multiplier);
     TestTime(99, 300, multiplier);
-    //TestTime(5, 1000, multiplier);
+    TestTime(5, 1000, multiplier);
   }
 
   private static void TestTime(final int numberOfRepeats, final int size, final MultiMatrix.Multiplier multiplier) {
@@ -40,13 +40,15 @@ public class Main {
       return;
     }
     try {
-      calcAveTime(numberOfRepeats, "with thread pool with future", size, result, MultiMatrix::multi, multiplier);
+      calcAveTime(numberOfRepeats, "with thread pool with future", size, result, MultiMatrix::multiThreadPoolFuture,
+                  multiplier);
     } catch (final Exception e) {
       e.printStackTrace();
       return;
     }
     try {
-      calcAveTime(numberOfRepeats, "with thread pool with counter", size, result, MultiMatrix::multi, multiplier);
+      calcAveTime(numberOfRepeats, "with thread pool with counter", size, result, MultiMatrix::multiThreadPoolCounter,
+                  multiplier);
     } catch (final Exception e) {
       e.printStackTrace();
     }

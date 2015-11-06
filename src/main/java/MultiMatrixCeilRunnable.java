@@ -22,8 +22,8 @@ public class MultiMatrixCeilRunnable<T> implements Runnable {
 
   public void run() {
     result[i][j] = multiplier.zero();
-    for (int k = 0; k < b.length; ++k) {
-      result[i][j] = multiplier.add(result[i][j], multiplier.multi(a[i][k], b[k][j]));
+    for (int k = 0; k < b[0].length; ++k) {
+      result[i][j] = multiplier.add(result[i][j], multiplier.multi(a[i][k], b[j][k]));
     }
     consumer.onFinish();
   }

@@ -16,11 +16,11 @@ public class MultiMatrixThread<T> extends Thread {
   }
 
   public void run() {
-    for (int i = i1; i < i2; i++) {
-      for (int j = 0; j < b[0].length; j++) {
+    for (int j = 0; j < b.length; j++) {
+      for (int i = i1; i < i2; i++) {
         result[i][j] = multiplier.zero();
-        for (int k = 0; k < b.length; ++k) {
-          result[i][j] = multiplier.add(result[i][j], multiplier.multi(a[i][k], b[k][j]));
+        for (int k = 0; k < b[0].length; ++k) {
+          result[i][j] = multiplier.add(result[i][j], multiplier.multi(a[i][k], b[j][k]));
         }
       }
     }
